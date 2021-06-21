@@ -334,7 +334,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 		KeyEvent keyEvent;
 
 		event = new Event();
-		event.widget = getCtlText();
+		event.widget = getControl();
 		event.character = character;
 		event.keyCode = 0;
 		event.stateMask = 0;
@@ -372,7 +372,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public void setFocus() {
-		getCtlText().setFocus();
+		getControl().setFocus();
 	}
 
 	@Override
@@ -382,7 +382,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public boolean isDisposed() {
-		return getCtlText().isDisposed();
+		return getControl().isDisposed();
 	}
 
 	@Override
@@ -467,7 +467,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 				fDisplay.sleep();
 		} while (getState() == TerminalState.CONNECTING);
 
-		if (getCtlText().isDisposed()) {
+		if (getControl().isDisposed()) {
 			disconnectTerminal();
 			return;
 		}
@@ -476,7 +476,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 			disconnectTerminal();
 			return;
 		}
-		if (getCtlText().isFocusControl()) {
+		if (getControl().isFocusControl()) {
 			if (getState() == TerminalState.CONNECTED)
 				fFocusListener.captureKeyEvents(true);
 		}
@@ -573,7 +573,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public Shell getShell() {
-		return getCtlText().getShell();
+		return getControl().getShell();
 	}
 
 	protected void sendChar(char chKey, boolean altKeyPressed) {
@@ -731,7 +731,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	@Override
 	public void setFont(String fontName) {
 		Font font = JFaceResources.getFont(fontName);
-		getCtlText().setFont(font);
+		getControl().setFont(font);
 		if (fCommandInputField != null) {
 			fCommandInputField.setFont(font);
 		}
@@ -743,7 +743,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	@Override
 	@Deprecated
 	public void setFont(Font font) {
-		getCtlText().setFont(font);
+		getControl().setFont(font);
 		if (fCommandInputField != null) {
 			fCommandInputField.setFont(font);
 		}
@@ -755,7 +755,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public Font getFont() {
-		return getCtlText().getFont();
+		return getControl().getFont();
 	}
 
 	@Override
@@ -795,7 +795,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 			}
 		});
 
-		fDisplay = getCtlText().getDisplay();
+		fDisplay = getControl().getDisplay();
 		fClipboard = new Clipboard(fDisplay);
 	}
 
@@ -803,8 +803,8 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 		fKeyHandler = new TerminalKeyHandler();
 		fFocusListener = new TerminalFocusListener();
 
-		getCtlText().addKeyListener(fKeyHandler);
-		getCtlText().addFocusListener(fFocusListener);
+		getControl().addKeyListener(fKeyHandler);
+		getControl().addFocusListener(fFocusListener);
 
 	}
 
