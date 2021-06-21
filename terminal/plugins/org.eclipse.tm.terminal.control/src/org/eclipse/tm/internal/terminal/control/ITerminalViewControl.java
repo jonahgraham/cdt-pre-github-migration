@@ -42,7 +42,9 @@ public interface ITerminalViewControl {
 	 * @deprecated Use {@link #setCharset(Charset)} and do the error handling in the UI code.
 	 */
 	@Deprecated
-	void setEncoding(String encoding) throws UnsupportedEncodingException;
+	default void setEncoding(String encoding) throws UnsupportedEncodingException {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Set the charset that the Terminal uses to decode byte streams into
@@ -62,7 +64,9 @@ public interface ITerminalViewControl {
 	 * @deprecated Use {@link #getCharset()} and call {@link Charset#name()} on the result
 	 */
 	@Deprecated
-	String getEncoding();
+	default String getEncoding() {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * @return the non-<code>null</code> current Charset of the Terminal.
@@ -79,7 +83,9 @@ public interface ITerminalViewControl {
 	 * @param font
 	 */
 	@Deprecated
-	void setFont(Font font);
+	default void setFont(Font font) {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Sets the font for the Terminal, using a JFace symbolic font name, such
