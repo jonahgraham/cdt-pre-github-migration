@@ -348,6 +348,7 @@ public class VT100EmulatorBackend implements IVT100EmulatorBackend {
 	 * MUST be called from a synchronized block!
 	 */
 	private void doNewline() {
+		assert Thread.holdsLock(fTerminal);
 		if (fCursorLine == fScrollRegion.getBottomLine())
 			scrollUp(1);
 		else if (fCursorLine + 1 >= fLines) {

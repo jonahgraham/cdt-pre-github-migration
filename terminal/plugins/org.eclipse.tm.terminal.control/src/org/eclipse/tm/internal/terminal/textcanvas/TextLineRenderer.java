@@ -41,7 +41,7 @@ public class TextLineRenderer implements ILinelRenderer {
 	private final ITextCanvasModel fModel;
 	private final StyleMap fStyleMap;
 
-	public TextLineRenderer(TextCanvas c, ITextCanvasModel model) {
+	public TextLineRenderer(ITextCanvasModel model) {
 		fModel = model;
 		fStyleMap = new StyleMap();
 	}

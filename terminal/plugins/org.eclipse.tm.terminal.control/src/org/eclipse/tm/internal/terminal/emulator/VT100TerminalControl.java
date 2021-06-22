@@ -322,7 +322,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public void selectAll() {
-		getCtlText().selectAll();
+		fCtlText.selectAll();
 		if (fTerminalListener instanceof ITerminalListener2) {
 			((ITerminalListener2) fTerminalListener).setTerminalSelectionChanged();
 		}
@@ -348,7 +348,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	public void clearTerminal() {
 		// The TerminalText object does all text manipulation.
 		getTerminalText().clearTerminal();
-		getCtlText().clearSelection();
+		fCtlText.clearSelection();
 		if (fTerminalListener instanceof ITerminalListener2) {
 			((ITerminalListener2) fTerminalListener).setTerminalSelectionChanged();
 		}
@@ -377,7 +377,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public boolean isEmpty() {
-		return getCtlText().isEmpty();
+		return fCtlText.isEmpty();
 	}
 
 	@Override
@@ -781,7 +781,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 		snapshot.updateSnapshot(false);
 		fPollingTextCanvasModel = new PollingTextCanvasModel(snapshot);
 		fCtlText = new TextCanvas(fWndParent, fPollingTextCanvasModel, SWT.NONE,
-				new TextLineRenderer(fCtlText, fPollingTextCanvasModel));
+				new TextLineRenderer(fPollingTextCanvasModel));
 
 		fCtlText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		fCtlText.addResizeHandler((lines, columns) -> fTerminalText.setDimensions(lines, columns));
@@ -864,10 +864,6 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	public String getMsg() {
 		return fMsg;
-	}
-
-	protected TextCanvas getCtlText() {
-		return fCtlText;
 	}
 
 	public VT100Emulator getTerminalText() {
@@ -1391,12 +1387,12 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public void addMouseListener(ITerminalMouseListener listener) {
-		getCtlText().addTerminalMouseListener(listener);
+		fCtlText.addTerminalMouseListener(listener);
 	}
 
 	@Override
 	public void removeMouseListener(ITerminalMouseListener listener) {
-		getCtlText().removeTerminalMouseListener(listener);
+		fCtlText.removeTerminalMouseListener(listener);
 	}
 
 	@Override
