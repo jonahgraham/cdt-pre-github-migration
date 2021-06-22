@@ -57,7 +57,9 @@ public interface ITerminalTextData extends ITerminalTextDataReadOnly {
 	 * @param chars the new characters at this position
 	 * @param style the style or null
 	 * @since 5.0
+	 * @deprecated Only used in tests.
 	 */
+	@Deprecated
 	void setChars(int line, int column, char[] chars, TerminalStyle style);
 
 	/**
