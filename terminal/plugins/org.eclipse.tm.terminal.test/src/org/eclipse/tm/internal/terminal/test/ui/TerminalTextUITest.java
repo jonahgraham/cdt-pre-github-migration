@@ -16,8 +16,15 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.LineStyleEvent;
+import org.eclipse.swt.custom.LineStyleListener;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -30,11 +37,15 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.tm.internal.terminal.textcanvas.ITextCanvasModel;
+import org.eclipse.tm.internal.terminal.textcanvas.ITextCanvasModelListener;
 import org.eclipse.tm.internal.terminal.textcanvas.PollingTextCanvasModel;
+import org.eclipse.tm.internal.terminal.textcanvas.StyleMap;
 import org.eclipse.tm.internal.terminal.textcanvas.TextCanvas;
 import org.eclipse.tm.internal.terminal.textcanvas.TextLineRenderer;
 import org.eclipse.tm.terminal.model.ITerminalTextData;
+import org.eclipse.tm.terminal.model.ITerminalTextDataReadOnly;
 import org.eclipse.tm.terminal.model.ITerminalTextDataSnapshot;
+import org.eclipse.tm.terminal.model.LineSegment;
 import org.eclipse.tm.terminal.model.TerminalTextDataFactory;
 
 /**
@@ -51,6 +62,7 @@ public class TerminalTextUITest {
 	static DataReader fDataReader;
 	static List fDataReaders = new ArrayList();
 	private static Text heightText;
+	private static StyledText fStyledText;
 
 	static class Status implements IStatus {
 		@Override
@@ -82,8 +94,79 @@ public class TerminalTextUITest {
 		// TODO how to get the initial size correctly!
 		snapshot.updateSnapshot(false);
 		fgModel = new PollingTextCanvasModel(snapshot);
-		fgTextCanvas = new TextCanvas(shell, fgModel, SWT.NONE, new TextLineRenderer(fgTextCanvas, fgModel));
-		fgTextCanvas.setLayoutData(new GridData(GridData.FILL_BOTH));
+		if (false) {
+			fgTextCanvas = new TextCanvas(shell, fgModel, SWT.NONE, new TextLineRenderer(fgModel));
+			fgTextCanvas.setLayoutData(new GridData(GridData.FILL_BOTH));
+		} else {
+			ITerminalTextDataReadOnly terminalText = fgModel.getTerminalText();
+			StyleMap styleMap = new StyleMap();
+			fStyledText = new StyledText(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.WRAP);
+			fStyledText.setLayoutData(new GridData(GridData.FILL_BOTH));
+			fStyledText.setText(("X".repeat(60) + "\n").repeat(10));
+			fStyledText.addLineStyleListener(new LineStyleListener() {
+
+				@Override
+				public void lineGetStyle(LineStyleEvent event) {
+					int lineAtOffset = fStyledText.getLineAtOffset(event.lineOffset);
+
+					LineSegment[] lineSegments = terminalText.getLineSegments(lineAtOffset, 0, terminalText.getWidth());
+					StyleRange[] ranges = new StyleRange[lineSegments.length];
+					for (int i = 0; i < lineSegments.length; i++) {
+						RGB foregrondColor = styleMap.getForegrondRGB(lineSegments[i].getStyle());
+						RGB backgroundColor = styleMap.getBackgroundRGB(lineSegments[i].getStyle());
+
+						Font f = styleMap.getFont(lineSegments[i].getStyle());
+						ranges[i] = new StyleRange(event.lineOffset + lineSegments[i].getColumn(),
+								lineSegments[i].getText().length(), new Color(foregrondColor),
+								new Color(backgroundColor));
+						ranges[i].font = f;
+
+					}
+					event.styles = ranges;
+				}
+			});
+
+			fgModel.addCellCanvasModelListener(new ITextCanvasModelListener() {
+				@Override
+				public void rangeChanged(int col, int line, int width, int height) {
+					if (fStyledText.isDisposed())
+						return;
+					StringBuilder sb = new StringBuilder();
+					synchronized (terminalText) {
+						for (int i = 0; i < terminalText.getHeight(); i++) {
+							LineSegment[] lineSegments = terminalText.getLineSegments(i, 0, terminalText.getWidth());
+							for (int j = 0; j < lineSegments.length; j++) {
+								sb.append(lineSegments[j].getText().replace('\0', ' '));
+							}
+							sb.append("\n");
+						}
+						sb.deleteCharAt(sb.length() - 1);
+					}
+					fStyledText.setText(sb.toString());
+					fStyledText.redraw();
+
+				}
+
+				@Override
+				public void dimensionsChanged(int cols, int rows) {
+					//					if (isDisposed())
+					//						return;
+					//					calculateGrid();
+				}
+
+				@Override
+				public void terminalDataChanged() {
+					//					if (isDisposed())
+					//						return;
+					//
+					//					// scroll to end (unless scroll lock is active)
+					//					if (!fResizing) {
+					//						calculateGrid();
+					//						scrollToEnd();
+					//					}
+				}
+			});
+		}
 
 		composite.setLayout(layout);
 		addAutorevealCursorButton(composite);
@@ -209,6 +292,9 @@ public class TerminalTextUITest {
 	}
 
 	private static void addAutorevealCursorButton(Composite composite) {
+		if (fgTextCanvas == null) {
+			return;
+		}
 		final Button button = new Button(composite, SWT.CHECK);
 		button.setText("ScrollLock");
 		button.addSelectionListener(new SelectionAdapter() {
