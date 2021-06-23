@@ -16,8 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.LineStyleEvent;
-import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -103,28 +101,28 @@ public class TerminalTextUITest {
 			fStyledText = new StyledText(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.WRAP);
 			fStyledText.setLayoutData(new GridData(GridData.FILL_BOTH));
 			fStyledText.setText(("X".repeat(60) + "\n").repeat(10));
-			fStyledText.addLineStyleListener(new LineStyleListener() {
-
-				@Override
-				public void lineGetStyle(LineStyleEvent event) {
-					int lineAtOffset = fStyledText.getLineAtOffset(event.lineOffset);
-
-					LineSegment[] lineSegments = terminalText.getLineSegments(lineAtOffset, 0, terminalText.getWidth());
-					StyleRange[] ranges = new StyleRange[lineSegments.length];
-					for (int i = 0; i < lineSegments.length; i++) {
-						RGB foregrondColor = styleMap.getForegrondRGB(lineSegments[i].getStyle());
-						RGB backgroundColor = styleMap.getBackgroundRGB(lineSegments[i].getStyle());
-
-						Font f = styleMap.getFont(lineSegments[i].getStyle());
-						ranges[i] = new StyleRange(event.lineOffset + lineSegments[i].getColumn(),
-								lineSegments[i].getText().length(), new Color(foregrondColor),
-								new Color(backgroundColor));
-						ranges[i].font = f;
-
-					}
-					event.styles = ranges;
-				}
-			});
+			//			fStyledText.addLineStyleListener(new LineStyleListener() {
+			//
+			//				@Override
+			//				public void lineGetStyle(LineStyleEvent event) {
+			//					int lineAtOffset = fStyledText.getLineAtOffset(event.lineOffset);
+			//
+			//					LineSegment[] lineSegments = terminalText.getLineSegments(lineAtOffset, 0, terminalText.getWidth());
+			//					StyleRange[] ranges = new StyleRange[lineSegments.length];
+			//					for (int i = 0; i < lineSegments.length; i++) {
+			//						RGB foregrondColor = styleMap.getForegrondRGB(lineSegments[i].getStyle());
+			//						RGB backgroundColor = styleMap.getBackgroundRGB(lineSegments[i].getStyle());
+			//
+			//						Font f = styleMap.getFont(lineSegments[i].getStyle());
+			//						ranges[i] = new StyleRange(event.lineOffset + lineSegments[i].getColumn(),
+			//								lineSegments[i].getText().length(), new Color(foregrondColor),
+			//								new Color(backgroundColor));
+			//						ranges[i].font = f;
+			//
+			//					}
+			//					event.styles = ranges;
+			//				}
+			//			});
 
 			fgModel.addCellCanvasModelListener(new ITextCanvasModelListener() {
 				@Override
@@ -132,17 +130,31 @@ public class TerminalTextUITest {
 					if (fStyledText.isDisposed())
 						return;
 					StringBuilder sb = new StringBuilder();
+					List<StyleRange> ranges = new ArrayList<>();
 					synchronized (terminalText) {
 						for (int i = 0; i < terminalText.getHeight(); i++) {
 							LineSegment[] lineSegments = terminalText.getLineSegments(i, 0, terminalText.getWidth());
+							int lineOffset = sb.length();
 							for (int j = 0; j < lineSegments.length; j++) {
+
+								RGB foregrondColor = styleMap.getForegrondRGB(lineSegments[j].getStyle());
+								RGB backgroundColor = styleMap.getBackgroundRGB(lineSegments[j].getStyle());
+
+								Font f = styleMap.getFont(lineSegments[j].getStyle());
+								StyleRange range = new StyleRange(lineOffset + lineSegments[j].getColumn(),
+										lineSegments[j].getText().length(), new Color(foregrondColor),
+										new Color(backgroundColor));
+								range.font = f;
+
 								sb.append(lineSegments[j].getText().replace('\0', ' '));
+								ranges.add(range);
 							}
 							sb.append("\n");
 						}
 						sb.deleteCharAt(sb.length() - 1);
 					}
 					fStyledText.setText(sb.toString());
+					fStyledText.setStyleRanges(ranges.toArray(StyleRange[]::new));
 					fStyledText.redraw();
 
 				}
