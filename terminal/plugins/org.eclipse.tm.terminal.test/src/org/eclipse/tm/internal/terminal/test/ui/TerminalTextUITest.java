@@ -98,7 +98,9 @@ public class TerminalTextUITest {
 		} else {
 			ITerminalTextDataReadOnly terminalText = fgModel.getTerminalText();
 			StyleMap styleMap = new StyleMap();
-			fStyledText = new StyledText(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.WRAP);
+			fStyledText = new StyledText(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.MULTI);
+			fStyledText.setAlwaysShowScrollBars(false);
+			System.out.println(fStyledText.getAlwaysShowScrollBars());
 			fStyledText.setLayoutData(new GridData(GridData.FILL_BOTH));
 			fStyledText.setText(("X".repeat(60) + "\n").repeat(10));
 			//			fStyledText.addLineStyleListener(new LineStyleListener() {
@@ -125,6 +127,8 @@ public class TerminalTextUITest {
 			//			});
 
 			fgModel.addCellCanvasModelListener(new ITextCanvasModelListener() {
+				private boolean scrollLock = false;
+
 				@Override
 				public void rangeChanged(int col, int line, int width, int height) {
 					if (fStyledText.isDisposed())
@@ -155,6 +159,7 @@ public class TerminalTextUITest {
 					}
 					fStyledText.setText(sb.toString());
 					fStyledText.setStyleRanges(ranges.toArray(StyleRange[]::new));
+					fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
 					fStyledText.redraw();
 
 				}
@@ -168,14 +173,11 @@ public class TerminalTextUITest {
 
 				@Override
 				public void terminalDataChanged() {
-					//					if (isDisposed())
-					//						return;
-					//
-					//					// scroll to end (unless scroll lock is active)
-					//					if (!fResizing) {
-					//						calculateGrid();
-					//						scrollToEnd();
-					//					}
+					if (fStyledText.isDisposed())
+						return;
+					if (!scrollLock) {
+						fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
+					}
 				}
 			});
 		}

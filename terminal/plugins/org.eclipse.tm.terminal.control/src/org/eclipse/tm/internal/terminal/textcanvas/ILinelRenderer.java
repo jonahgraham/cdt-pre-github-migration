@@ -52,12 +52,12 @@ public interface ILinelRenderer {
 
 	boolean isInvertedColors();
 
+	Color getDefaultBackgroundColor();
+
 	/**
 	 * @deprecated use {@link #getDefaultBackgroundColor(Device)}
 	 */
 	@Deprecated
-	Color getDefaultBackgroundColor();
-
 	Color getDefaultBackgroundColor(Device device);
 
 }

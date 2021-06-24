@@ -25,7 +25,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.tm.internal.terminal.control.impl.TerminalPlugin;
 import org.eclipse.tm.internal.terminal.provisional.api.Logger;
 import org.eclipse.tm.terminal.model.ITerminalTextDataReadOnly;
@@ -133,14 +132,13 @@ public class TextLineRenderer implements ILinelRenderer {
 
 	@Override
 	public Color getDefaultBackgroundColor() {
-		return getDefaultBackgroundColor(Display.getDefault());
+		RGB backgroundRGB = fStyleMap.getBackgroundRGB(null);
+		return new Color(backgroundRGB);
 	}
 
 	@Override
 	public Color getDefaultBackgroundColor(Device device) {
-		// null == default style
-		RGB backgroundRGB = fStyleMap.getBackgroundRGB(null);
-		return new Color(device, backgroundRGB);
+		return getDefaultBackgroundColor();
 	}
 
 	private void drawCursor(ITextCanvasModel model, GC gc, int row, int x, int y, int colFirst) {
