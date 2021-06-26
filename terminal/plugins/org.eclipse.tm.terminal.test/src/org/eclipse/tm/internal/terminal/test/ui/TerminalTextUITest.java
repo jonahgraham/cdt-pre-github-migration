@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.Region;
+import org.eclipse.jface.text.TextPresentation;
+import org.eclipse.jface.text.TextViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -61,6 +65,7 @@ public class TerminalTextUITest {
 	static List fDataReaders = new ArrayList();
 	private static Text heightText;
 	private static StyledText fStyledText;
+	private static TextViewer fTextViewer;
 
 	static class Status implements IStatus {
 		@Override
@@ -95,6 +100,74 @@ public class TerminalTextUITest {
 		if (false) {
 			fgTextCanvas = new TextCanvas(shell, fgModel, SWT.NONE, new TextLineRenderer(fgModel));
 			fgTextCanvas.setLayoutData(new GridData(GridData.FILL_BOTH));
+		} else if (true) {
+			ITerminalTextDataReadOnly terminalText = fgModel.getTerminalText();
+			StyleMap styleMap = new StyleMap();
+			fTextViewer = new TextViewer(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.MULTI);
+			fTextViewer.getTextWidget().setLayoutData(new GridData(GridData.FILL_BOTH));
+			Document document = new Document(("X".repeat(60) + "\n").repeat(10));
+			fTextViewer.setDocument(document);
+			document.setDocumentPartitioner(null);
+			fgModel.addCellCanvasModelListener(new ITextCanvasModelListener() {
+				private boolean scrollLock = false;
+
+				@Override
+				public void rangeChanged(int col, int line, int width, int height) {
+					if (fTextViewer.getControl().isDisposed())
+						return;
+					StringBuilder sb = new StringBuilder();
+					List<StyleRange> ranges = new ArrayList<>();
+					synchronized (terminalText) {
+						for (int i = 0; i < terminalText.getHeight(); i++) {
+							LineSegment[] lineSegments = terminalText.getLineSegments(i, 0, terminalText.getWidth());
+							int lineOffset = sb.length();
+							for (int j = 0; j < lineSegments.length; j++) {
+
+								RGB foregrondColor = styleMap.getForegrondRGB(lineSegments[j].getStyle());
+								RGB backgroundColor = styleMap.getBackgroundRGB(lineSegments[j].getStyle());
+
+								Font f = styleMap.getFont(lineSegments[j].getStyle());
+								StyleRange range = new StyleRange(lineOffset + lineSegments[j].getColumn(),
+										lineSegments[j].getText().length(), new Color(foregrondColor),
+										new Color(backgroundColor));
+								range.font = f;
+
+								sb.append(lineSegments[j].getText().replace('\0', ' '));
+								ranges.add(range);
+							}
+							sb.append("\n");
+						}
+						sb.deleteCharAt(sb.length() - 1);
+					}
+					document.set(sb.toString());
+
+					//					fTextViewer.setText(sb.toString());
+					//					fTextViewer.setStyleRanges(ranges.toArray(StyleRange[]::new));
+					TextPresentation presentation = new TextPresentation(new Region(0, sb.length()), ranges.size());
+					presentation.replaceStyleRanges(ranges.toArray(StyleRange[]::new));
+					fTextViewer.changeTextPresentation(presentation, true);
+
+					fTextViewer.setTopIndex(document.getNumberOfLines() - 1);
+					//					fTextViewer.redraw();
+
+				}
+
+				@Override
+				public void dimensionsChanged(int cols, int rows) {
+					//					if (isDisposed())
+					//						return;
+					//					calculateGrid();
+				}
+
+				@Override
+				public void terminalDataChanged() {
+					if (fTextViewer.getControl().isDisposed())
+						return;
+					if (!scrollLock) {
+						fTextViewer.setTopIndex(document.getNumberOfLines() - 1);
+					}
+				}
+			});
 		} else {
 			ITerminalTextDataReadOnly terminalText = fgModel.getTerminalText();
 			StyleMap styleMap = new StyleMap();
