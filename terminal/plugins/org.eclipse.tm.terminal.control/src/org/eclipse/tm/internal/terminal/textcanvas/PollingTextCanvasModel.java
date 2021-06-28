@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2018 Wind River Systems, Inc. and others.
+ * Copyright (c) 2007, 2021 Wind River Systems, Inc. and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.tm.terminal.model.ITerminalTextDataSnapshot;
  * @author Michael.Scharf@scharf-software.com
  *
  */
-public class PollingTextCanvasModel extends AbstractTextCanvasModel {
+public class PollingTextCanvasModel extends AbstractTextCanvasModel implements IPollingTextCanvasModel {
 	private static final int DEFAULT_POLL_INTERVAL = 50;
 	int fPollInterval = -1;
 
@@ -34,11 +34,13 @@ public class PollingTextCanvasModel extends AbstractTextCanvasModel {
 		fPollInterval = t;
 	}
 
+	@Override
 	public void stopPolling() {
 		// timerExec only dispatches if the delay is >=0
 		fPollInterval = -1;
 	}
 
+	@Override
 	public void startPolling() {
 		if (fPollInterval < 0) {
 			fPollInterval = DEFAULT_POLL_INTERVAL;
