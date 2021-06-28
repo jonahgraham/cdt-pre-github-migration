@@ -297,6 +297,10 @@ public class TerminalTextDataStore implements ITerminalTextData {
 		return fStyle[line].clone();
 	}
 
+	/**
+	 * @deprecated Unused in terminal anywhere
+	 */
+	@Deprecated
 	public void setLine(int line, char[] chars, TerminalStyle[] styles) {
 		fChars[line] = chars.clone();
 		fStyle[line] = styles.clone();
