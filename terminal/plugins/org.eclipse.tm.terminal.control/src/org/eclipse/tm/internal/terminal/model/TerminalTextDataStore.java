@@ -66,9 +66,6 @@ public class TerminalTextDataStore implements ITerminalTextData {
 		assert width >= 0 || throwRuntimeException();
 		// just extend the region
 		if (height > fChars.length) {
-			int h = 4 * height / 3;
-			if (fMaxHeight > 0 && h > fMaxHeight)
-				h = fMaxHeight;
 			fStyle = (TerminalStyle[][]) resizeArray(fStyle, height);
 			fChars = (char[][]) resizeArray(fChars, height);
 		}
