@@ -16,10 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.tm.internal.terminal.textcanvas.ITextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.ITextCanvasModelListener;
+import org.eclipse.tm.internal.terminal.textcanvas.PollingNonUITextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.PollingTextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.StyleMap;
 import org.eclipse.tm.internal.terminal.textcanvas.TextCanvas;
@@ -96,11 +97,12 @@ public class TerminalTextUITest {
 		ITerminalTextDataSnapshot snapshot = fTerminalModel.makeSnapshot();
 		// TODO how to get the initial size correctly!
 		snapshot.updateSnapshot(false);
-		fgModel = new PollingTextCanvasModel(snapshot);
+
 		if (false) {
+			fgModel = new PollingTextCanvasModel(snapshot);
 			fgTextCanvas = new TextCanvas(shell, fgModel, SWT.NONE, new TextLineRenderer(fgModel));
 			fgTextCanvas.setLayoutData(new GridData(GridData.FILL_BOTH));
-		} else if (true) {
+		} else if (false) {
 			ITerminalTextDataReadOnly terminalText = fgModel.getTerminalText();
 			StyleMap styleMap = new StyleMap();
 			fTextViewer = new TextViewer(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.MULTI);
@@ -139,15 +141,19 @@ public class TerminalTextUITest {
 						}
 						sb.deleteCharAt(sb.length() - 1);
 					}
-					document.set(sb.toString());
+					String string = sb.toString();
+					StyleRange[] array = ranges.toArray(StyleRange[]::new);
+					fTextViewer.getControl().getDisplay().asyncExec(() -> {
+						document.set(string);
+						TextPresentation presentation = new TextPresentation();
+						presentation.replaceStyleRanges(array);
+						fTextViewer.changeTextPresentation(presentation, true);
+					});
 
 					//					fTextViewer.setText(sb.toString());
 					//					fTextViewer.setStyleRanges(ranges.toArray(StyleRange[]::new));
-					TextPresentation presentation = new TextPresentation(new Region(0, sb.length()), ranges.size());
-					presentation.replaceStyleRanges(ranges.toArray(StyleRange[]::new));
-					fTextViewer.changeTextPresentation(presentation, true);
 
-					fTextViewer.setTopIndex(document.getNumberOfLines() - 1);
+					//					fTextViewer.setTopIndex(document.getNumberOfLines() - 1);
 					//					fTextViewer.redraw();
 
 				}
@@ -164,11 +170,12 @@ public class TerminalTextUITest {
 					if (fTextViewer.getControl().isDisposed())
 						return;
 					if (!scrollLock) {
-						fTextViewer.setTopIndex(document.getNumberOfLines() - 1);
+						//						fTextViewer.setTopIndex(document.getNumberOfLines() - 1);
 					}
 				}
 			});
 		} else {
+			fgModel = new PollingNonUITextCanvasModel(snapshot);
 			ITerminalTextDataReadOnly terminalText = fgModel.getTerminalText();
 			StyleMap styleMap = new StyleMap();
 			fStyledText = new StyledText(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.MULTI);
@@ -176,29 +183,6 @@ public class TerminalTextUITest {
 			System.out.println(fStyledText.getAlwaysShowScrollBars());
 			fStyledText.setLayoutData(new GridData(GridData.FILL_BOTH));
 			fStyledText.setText(("X".repeat(60) + "\n").repeat(10));
-			//			fStyledText.addLineStyleListener(new LineStyleListener() {
-			//
-			//				@Override
-			//				public void lineGetStyle(LineStyleEvent event) {
-			//					int lineAtOffset = fStyledText.getLineAtOffset(event.lineOffset);
-			//
-			//					LineSegment[] lineSegments = terminalText.getLineSegments(lineAtOffset, 0, terminalText.getWidth());
-			//					StyleRange[] ranges = new StyleRange[lineSegments.length];
-			//					for (int i = 0; i < lineSegments.length; i++) {
-			//						RGB foregrondColor = styleMap.getForegrondRGB(lineSegments[i].getStyle());
-			//						RGB backgroundColor = styleMap.getBackgroundRGB(lineSegments[i].getStyle());
-			//
-			//						Font f = styleMap.getFont(lineSegments[i].getStyle());
-			//						ranges[i] = new StyleRange(event.lineOffset + lineSegments[i].getColumn(),
-			//								lineSegments[i].getText().length(), new Color(foregrondColor),
-			//								new Color(backgroundColor));
-			//						ranges[i].font = f;
-			//
-			//					}
-			//					event.styles = ranges;
-			//				}
-			//			});
-
 			fgModel.addCellCanvasModelListener(new ITextCanvasModelListener() {
 				private boolean scrollLock = false;
 
@@ -230,10 +214,20 @@ public class TerminalTextUITest {
 						}
 						sb.deleteCharAt(sb.length() - 1);
 					}
-					fStyledText.setText(sb.toString());
-					fStyledText.setStyleRanges(ranges.toArray(StyleRange[]::new));
-					fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
-					fStyledText.redraw();
+					String string = sb.toString();
+					StyleRange[] array = ranges.toArray(StyleRange[]::new);
+					try {
+						fStyledText.getDisplay().asyncExec(() -> {
+							if (fStyledText.isDisposed())
+								return;
+							fStyledText.setText(string);
+							fStyledText.setStyleRanges(array);
+							fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
+							fStyledText.redraw();
+						});
+					} catch (SWTException e) {
+						// disposed
+					}
 
 				}
 
@@ -249,7 +243,15 @@ public class TerminalTextUITest {
 					if (fStyledText.isDisposed())
 						return;
 					if (!scrollLock) {
-						fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
+						try {
+							fStyledText.getDisplay().asyncExec(() -> {
+								if (fStyledText.isDisposed())
+									return;
+								fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
+							});
+						} catch (SWTException e) {
+							// disposed
+						}
 					}
 				}
 			});
