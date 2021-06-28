@@ -220,6 +220,7 @@ public class TerminalTextUITest {
 						fStyledText.getDisplay().asyncExec(() -> {
 							if (fStyledText.isDisposed())
 								return;
+							fStyledText.rep;
 							fStyledText.setText(string);
 							fStyledText.setStyleRanges(array);
 							fStyledText.setTopIndex(fStyledText.getLineCount() - 1);

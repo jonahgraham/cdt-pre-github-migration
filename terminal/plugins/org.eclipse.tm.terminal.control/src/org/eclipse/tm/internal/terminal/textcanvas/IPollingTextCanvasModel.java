@@ -7,7 +7,7 @@
  */
 package org.eclipse.tm.internal.terminal.textcanvas;
 
-public interface IPollingTextCanvasModel {
+public interface IPollingTextCanvasModel extends ITextCanvasModel {
 
 	void stopPolling();
 

@@ -109,6 +109,7 @@ import org.eclipse.tm.internal.terminal.provisional.api.ITerminalConnector;
 import org.eclipse.tm.internal.terminal.provisional.api.ITerminalControl;
 import org.eclipse.tm.internal.terminal.provisional.api.Logger;
 import org.eclipse.tm.internal.terminal.provisional.api.TerminalState;
+import org.eclipse.tm.internal.terminal.textcanvas.IPollingTextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.PipedInputStream;
 import org.eclipse.tm.internal.terminal.textcanvas.PollingTextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.TextCanvas;
@@ -180,7 +181,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	 */
 	volatile private Job fJob;
 
-	private PollingTextCanvasModel fPollingTextCanvasModel;
+	private IPollingTextCanvasModel fPollingTextCanvasModel;
 
 	/**
 	 * Instantiate a Terminal widget.
