@@ -60,7 +60,9 @@ public interface ITerminalTextData extends ITerminalTextDataReadOnly {
 	 * @deprecated Only used in tests.
 	 */
 	@Deprecated
-	void setChars(int line, int column, char[] chars, TerminalStyle style);
+	default void setChars(int line, int column, char[] chars, TerminalStyle style) {
+		setChars(line, column, chars, 0, chars.length, style);
+	}
 
 	/**
 	 * Set a subrange of an array of characters showing in the same {@link TerminalStyle}.
