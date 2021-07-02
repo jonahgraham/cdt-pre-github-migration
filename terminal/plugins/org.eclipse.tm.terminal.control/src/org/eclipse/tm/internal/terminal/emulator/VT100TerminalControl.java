@@ -111,8 +111,11 @@ import org.eclipse.tm.internal.terminal.provisional.api.Logger;
 import org.eclipse.tm.internal.terminal.provisional.api.TerminalState;
 import org.eclipse.tm.internal.terminal.textcanvas.IPollingTextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.PipedInputStream;
+import org.eclipse.tm.internal.terminal.textcanvas.PollingNonUITextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.PollingTextCanvasModel;
+import org.eclipse.tm.internal.terminal.textcanvas.StyleMap;
 import org.eclipse.tm.internal.terminal.textcanvas.TextCanvas;
+import org.eclipse.tm.internal.terminal.textcanvas.TextCanvasViewer;
 import org.eclipse.tm.internal.terminal.textcanvas.TextLineRenderer;
 import org.eclipse.tm.terminal.model.ITerminalTextData;
 import org.eclipse.tm.terminal.model.ITerminalTextDataSnapshot;
@@ -135,6 +138,7 @@ import org.eclipse.ui.keys.IBindingService;
  * @author Chris Thew <chris.thew@windriver.com>
  */
 public class VT100TerminalControl implements ITerminalControlForText, ITerminalControl, ITerminalViewControl {
+	private static final boolean NEW = true;
 	protected final static String[] LINE_DELIMITERS = { "\n" }; //$NON-NLS-1$
 
 	/**
@@ -144,7 +148,13 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	 */
 	private final VT100Emulator fTerminalText;
 	private Display fDisplay;
+
+	/** null if NEW */
 	private TextCanvas fCtlText;
+	/** null if !NEW */
+	private TextCanvasViewer viewer;
+	private StyleMap styleMap;
+
 	private Composite fWndParent;
 	private Clipboard fClipboard;
 	private KeyListener fKeyHandler;
@@ -349,7 +359,9 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	public void clearTerminal() {
 		// The TerminalText object does all text manipulation.
 		getTerminalText().clearTerminal();
-		fCtlText.clearSelection();
+		if (!NEW) {
+			fCtlText.clearSelection();
+		}
 		if (fTerminalListener instanceof ITerminalListener2) {
 			((ITerminalListener2) fTerminalListener).setTerminalSelectionChanged();
 		}
@@ -365,6 +377,9 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 	 */
 	@Override
 	public String getSelection() {
+		if (NEW) {
+			return viewer.getControl().getSelectionText();
+		}
 		String txt = fCtlText.getSelectionText();
 		if (txt == null)
 			txt = ""; //$NON-NLS-1$
@@ -378,6 +393,9 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public boolean isEmpty() {
+		if (NEW) {
+			return viewer.getControl().getText().isEmpty();
+		}
 		return fCtlText.isEmpty();
 	}
 
@@ -703,7 +721,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 			}
 			map.put(terminalColor, rgb);
 		}
-		fCtlText.updateColors(map);
+		styleMap.updateColors(map);
 	}
 
 	private String getFontDefinition() {
@@ -737,7 +755,7 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 			fCommandInputField.setFont(font);
 		}
 		// Tell the TerminalControl singleton that the font has changed.
-		fCtlText.updateFont(fontName);
+		styleMap.updateFont(fontName);
 		getTerminalText().fontChanged();
 	}
 
@@ -750,7 +768,9 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 		}
 
 		// Tell the TerminalControl singleton that the font has changed.
-		fCtlText.onFontChange();
+		if (fCtlText != null) {
+			fCtlText.onFontChange();
+		}
 		getTerminalText().fontChanged();
 	}
 
@@ -761,6 +781,9 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public Control getControl() {
+		if (NEW) {
+			return viewer.getControl();
+		}
 		return fCtlText;
 	}
 
@@ -780,21 +803,34 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 		ITerminalTextDataSnapshot snapshot = fTerminalModel.makeSnapshot();
 		// TODO how to get the initial size correctly!
 		snapshot.updateSnapshot(false);
-		fPollingTextCanvasModel = new PollingTextCanvasModel(snapshot);
-		fCtlText = new TextCanvas(fWndParent, fPollingTextCanvasModel, SWT.NONE,
-				new TextLineRenderer(fPollingTextCanvasModel));
+		if (NEW) {
+			fPollingTextCanvasModel = new PollingNonUITextCanvasModel(snapshot);
+			viewer = new TextCanvasViewer();
+			Control control = viewer.createControl(fWndParent);
+			control.setLayoutData(new GridData(GridData.FILL_BOTH));
+			viewer.setInput(fPollingTextCanvasModel);
+			fPollingTextCanvasModel.addCellCanvasModelListener(viewer);
+			styleMap = viewer.getStyleMap();
 
-		fCtlText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		fCtlText.addResizeHandler((lines, columns) -> fTerminalText.setDimensions(lines, columns));
-		fCtlText.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				// update selection used by middle mouse button paste
-				if (e.button == 1 && getSelection().length() > 0) {
-					copy(DND.SELECTION_CLIPBOARD);
+			fTerminalText.setDimensions(4, 80); // TODO add resize handler
+			// TODO update selection for middle mouse???
+		} else {
+			fPollingTextCanvasModel = new PollingTextCanvasModel(snapshot);
+			fCtlText = new TextCanvas(fWndParent, fPollingTextCanvasModel, SWT.NONE,
+					new TextLineRenderer(fPollingTextCanvasModel));
+			fCtlText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			fCtlText.addResizeHandler((lines, columns) -> fTerminalText.setDimensions(lines, columns));
+			fCtlText.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseUp(MouseEvent e) {
+					// update selection used by middle mouse button paste
+					if (e.button == 1 && getSelection().length() > 0) {
+						copy(DND.SELECTION_CLIPBOARD);
+					}
 				}
-			}
-		});
+			});
+			styleMap = fCtlText.getStyleMap();
+		}
 
 		fDisplay = getControl().getDisplay();
 		fClipboard = new Clipboard(fDisplay);
@@ -1343,6 +1379,10 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public boolean isScrollLock() {
+		if (NEW) {
+			// TODO
+			return false;
+		}
 		return fCtlText.isScrollLock();
 	}
 
@@ -1353,12 +1393,12 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public void setInvertedColors(boolean invert) {
-		fCtlText.setInvertedColors(invert);
+		styleMap.setInvertedColors(invert);
 	}
 
 	@Override
 	public boolean isInvertedColors() {
-		return fCtlText.isInvertedColors();
+		return styleMap.isInvertedColors();
 	}
 
 	@Override
@@ -1388,7 +1428,9 @@ public class VT100TerminalControl implements ITerminalControlForText, ITerminalC
 
 	@Override
 	public void addMouseListener(ITerminalMouseListener listener) {
-		fCtlText.addTerminalMouseListener(listener);
+		// TODO
+		if (fCtlText != null)
+			fCtlText.addTerminalMouseListener(listener);
 	}
 
 	@Override

@@ -19,9 +19,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.TextViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -44,6 +42,7 @@ import org.eclipse.tm.internal.terminal.textcanvas.PollingNonUITextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.PollingTextCanvasModel;
 import org.eclipse.tm.internal.terminal.textcanvas.StyleMap;
 import org.eclipse.tm.internal.terminal.textcanvas.TextCanvas;
+import org.eclipse.tm.internal.terminal.textcanvas.TextCanvasViewer;
 import org.eclipse.tm.internal.terminal.textcanvas.TextLineRenderer;
 import org.eclipse.tm.terminal.model.ITerminalTextData;
 import org.eclipse.tm.terminal.model.ITerminalTextDataReadOnly;
@@ -56,16 +55,15 @@ import org.eclipse.tm.terminal.model.TerminalTextDataFactory;
  *
  */
 public class TerminalTextUITest {
-	static TextCanvas fgTextCanvas;
-	static ITextCanvasModel fgModel;
-	static ITerminalTextData fTerminalModel;
-	static Label fStatusLabel;
-	static volatile int fHeight;
-	static volatile int fWidth;
-	static DataReader fDataReader;
-	static List fDataReaders = new ArrayList();
+	private static TextCanvas fgTextCanvas;
+	private static ITextCanvasModel fgModel;
+	private static ITerminalTextData fTerminalModel;
+	private static Label fStatusLabel;
+	private static volatile int fHeight;
+	private static volatile int fWidth;
+	private static DataReader fDataReader;
+	private static List fDataReaders = new ArrayList();
 	private static Text heightText;
-	private static StyledText fStyledText;
 	private static TextViewer fTextViewer;
 
 	static class Status implements IStatus {
@@ -176,86 +174,11 @@ public class TerminalTextUITest {
 			});
 		} else {
 			fgModel = new PollingNonUITextCanvasModel(snapshot);
-			ITerminalTextDataReadOnly terminalText = fgModel.getTerminalText();
-			StyleMap styleMap = new StyleMap();
-			fStyledText = new StyledText(shell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.MULTI);
-			fStyledText.setAlwaysShowScrollBars(false);
-			System.out.println(fStyledText.getAlwaysShowScrollBars());
-			fStyledText.setLayoutData(new GridData(GridData.FILL_BOTH));
-			fStyledText.setText(("X".repeat(60) + "\n").repeat(10));
-			fgModel.addCellCanvasModelListener(new ITextCanvasModelListener() {
-				private boolean scrollLock = false;
-
-				@Override
-				public void rangeChanged(int col, int line, int width, int height) {
-					if (fStyledText.isDisposed())
-						return;
-					StringBuilder sb = new StringBuilder();
-					List<StyleRange> ranges = new ArrayList<>();
-					synchronized (terminalText) {
-						for (int i = 0; i < terminalText.getHeight(); i++) {
-							LineSegment[] lineSegments = terminalText.getLineSegments(i, 0, terminalText.getWidth());
-							int lineOffset = sb.length();
-							for (int j = 0; j < lineSegments.length; j++) {
-
-								RGB foregrondColor = styleMap.getForegrondRGB(lineSegments[j].getStyle());
-								RGB backgroundColor = styleMap.getBackgroundRGB(lineSegments[j].getStyle());
-
-								Font f = styleMap.getFont(lineSegments[j].getStyle());
-								StyleRange range = new StyleRange(lineOffset + lineSegments[j].getColumn(),
-										lineSegments[j].getText().length(), new Color(foregrondColor),
-										new Color(backgroundColor));
-								range.font = f;
-
-								sb.append(lineSegments[j].getText().replace('\0', ' '));
-								ranges.add(range);
-							}
-							sb.append("\n");
-						}
-						sb.deleteCharAt(sb.length() - 1);
-					}
-					String string = sb.toString();
-					StyleRange[] array = ranges.toArray(StyleRange[]::new);
-					try {
-						fStyledText.getDisplay().asyncExec(() -> {
-							if (fStyledText.isDisposed())
-								return;
-							fStyledText.rep;
-							fStyledText.setText(string);
-							fStyledText.setStyleRanges(array);
-							fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
-							fStyledText.redraw();
-						});
-					} catch (SWTException e) {
-						// disposed
-					}
-
-				}
-
-				@Override
-				public void dimensionsChanged(int cols, int rows) {
-					//					if (isDisposed())
-					//						return;
-					//					calculateGrid();
-				}
-
-				@Override
-				public void terminalDataChanged() {
-					if (fStyledText.isDisposed())
-						return;
-					if (!scrollLock) {
-						try {
-							fStyledText.getDisplay().asyncExec(() -> {
-								if (fStyledText.isDisposed())
-									return;
-								fStyledText.setTopIndex(fStyledText.getLineCount() - 1);
-							});
-						} catch (SWTException e) {
-							// disposed
-						}
-					}
-				}
-			});
+			TextCanvasViewer viewer = new TextCanvasViewer();
+			Control control = viewer.createControl(shell);
+			control.setLayoutData(new GridData(GridData.FILL_BOTH));
+			viewer.setInput(fgModel);
+			fgModel.addCellCanvasModelListener(viewer);
 		}
 
 		composite.setLayout(layout);

@@ -23,12 +23,6 @@ public class PollingNonUITextCanvasModel extends AbstractTextCanvasModel impleme
 	public PollingNonUITextCanvasModel(ITerminalTextDataSnapshot snapshot) {
 		super(snapshot);
 
-		timerTask = new TimerTask() {
-			@Override
-			public void run() {
-				update();
-			}
-		};
 		boolean isDaemon = true;
 		timer = new Timer(isDaemon);
 		startPolling();
@@ -36,11 +30,23 @@ public class PollingNonUITextCanvasModel extends AbstractTextCanvasModel impleme
 
 	@Override
 	public void stopPolling() {
-		timerTask.cancel();
+		if (timerTask != null) {
+			timerTask.cancel();
+			timerTask = null;
+		}
 	}
 
 	@Override
 	public void startPolling() {
+		if (timerTask != null) {
+			timerTask.cancel();
+		}
+		timerTask = new TimerTask() {
+			@Override
+			public void run() {
+				update();
+			}
+		};
 		timer.schedule(timerTask, DEFAULT_POLL_INTERVAL, DEFAULT_POLL_INTERVAL);
 	}
 }

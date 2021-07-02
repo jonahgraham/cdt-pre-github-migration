@@ -60,4 +60,6 @@ public interface ILinelRenderer {
 	@Deprecated
 	Color getDefaultBackgroundColor(Device device);
 
+	StyleMap getStyleMap();
+
 }

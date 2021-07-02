@@ -569,4 +569,8 @@ public class TextCanvas extends GridCanvas {
 		return fCellCanvasModel.getHoverSelectionText();
 	}
 
+	public StyleMap getStyleMap() {
+		return fCellRenderer.getStyleMap();
+	}
+
 }

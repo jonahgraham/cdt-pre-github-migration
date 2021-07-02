@@ -243,4 +243,9 @@ public class TextLineRenderer implements ILinelRenderer {
 	public boolean isInvertedColors() {
 		return fStyleMap.isInvertedColors();
 	}
+
+	@Override
+	public StyleMap getStyleMap() {
+		return fStyleMap;
+	}
 }

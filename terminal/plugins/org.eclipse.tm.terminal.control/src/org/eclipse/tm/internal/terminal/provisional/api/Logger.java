@@ -15,7 +15,6 @@
  *******************************************************************************/
 package org.eclipse.tm.internal.terminal.provisional.api;
 
-import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.lang.StackWalker.StackFrame;
 import java.util.Optional;
@@ -77,13 +76,13 @@ public final class Logger {
 			IPath logFile = Platform.getStateLocation(TerminalPlugin.getDefault().getBundle());
 			if (logFile != null && logFile.toFile().isDirectory()) {
 				logFile = logFile.append("tmterminal.log"); //$NON-NLS-1$
-				try {
-					logStream = new PrintStream(new FileOutputStream(logFile.toFile(), true));
-				} catch (Exception ex) {
-					logStream = System.err;
-					logStream.println("Exception when opening log file -- logging to stderr!"); //$NON-NLS-1$
-					ex.printStackTrace(logStream);
-				}
+				//				try {
+				//					logStream = new PrintStream(new FileOutputStream(logFile.toFile(), true));
+				//				} catch (Exception ex) {
+				logStream = System.out;
+				//					logStream.println("Exception when opening log file -- logging to stderr!"); //$NON-NLS-1$
+				//					ex.printStackTrace(logStream);
+				//				}
 			}
 		}
 	}
