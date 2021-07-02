@@ -37,6 +37,8 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
  */
 public class TerminalPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
+	private TerminalColorsFieldEditor fieldNeedsDisposing;
+
 	public TerminalPreferencePage() {
 		super(GRID);
 	}
@@ -72,6 +74,16 @@ public class TerminalPreferencePage extends FieldEditorPreferencePage implements
 		addField(new IntegerFieldEditor(ITerminalConstants.PREF_BUFFERLINES, TerminalMessages.BUFFERLINES,
 				getFieldEditorParent()));
 
-		addField(new TerminalColorsFieldEditor(getFieldEditorParent()));
+		fieldNeedsDisposing = new TerminalColorsFieldEditor(getFieldEditorParent());
+		addField(fieldNeedsDisposing);
+	}
+
+	@Override
+	public void dispose() {
+		if (fieldNeedsDisposing != null) {
+			fieldNeedsDisposing.dispose();
+			fieldNeedsDisposing = null;
+		}
+		super.dispose();
 	}
 }
