@@ -2,22 +2,61 @@
 
 Thanks for your interest in this project.
 
-## Project description
-
-The Eclipse CDT Project provides a fully functional C and C++ Integrated Development Environment based on the Eclipse platform. Features include: support for project creation and managed build for various toolchains, standard make build, source navigation, various source knowledge tools, such as type hierarchy, call graph, include browser, macro definition browser, code editor with syntax highlighting, folding and hyperlink navigation, source code refactoring and code generation, visual debugging tools, including memory, registers, and disassembly viewers.
-
-The Eclipse Foundation maintains metadata about the project, including release reviews, membership, and other parts of the Eclipse Development Process on the "PMI". The PMI page for Eclipse CDT is https://projects.eclipse.org/projects/tools.cdt
+> Noone ending here is interested what the project is about :-)
 
 ## Developer resources
 
-For any questions regarding developing, extending and contributing to Eclipse CDT you cannot find answers to here, please [Contact us](#contact)
+For any questions regarding developing, extending and contributing to Eclipse CDT you cannot find answers to here, please [Contact us](#contact). Please also help improving this page, once you got your answer.
 
 ## Contributing to CDT
+
+> Setup comes first
+
+### Setup CDT for development with Oomph
+
+The recommended flow for most users is to use the "Oomph" installer. With a few clicks you can get a fully working development environment.
+
+Use the Eclipse installer (Oomph) to setup the Eclipse installation and everything required to get started with CDT development. It downloads Eclipse, sets the API baseline, clones the CDT git repo and imports the projects for you.
+
+1. Download and run the Eclipse installer, available at https://www.eclipse.org/downloads/packages/installer.
+2. In the first page (product selection), click the preference button in the top-right corner and select the Advanced Mode button.
+  - If you are behind a proxy, at this point you might want to double check your network settings by clicking in the "Network Proxy Settings" at the bottom.
+3. Select Eclipse IDE for Eclipse Committers and select Latest as the product version. Click next.
+4. Under Eclipse Projects, select CDT. It should now be visible in the bottom list. Click next.
+5. Enter installation folder name, workspace name, etc. Click Next, Finish.
+6. The installer will download Eclipse, clone the git repository and import the sets of projects you selected.
+
+> What about setting the target and api baseline? (I alsways set things up manually)
+
+**TODO** Put in animated gif of install
+
+> Maybe a YT video? Gifs are usually quite large or bad quality.
+
+### Setup CDT for development, manual setup
+
+Many of the active Eclipse CDT developers manually setup their development environment instead of using Oomph as described above. *Developers new to Eclipse development should follow the Oomph instructions above.* The instructions in this section are brief and assume reader has some experience in Eclipse development already.
+
+> Adding the "full" instructions isn't that much more, but still helps. :)
+
+1. Use *Eclipse IDE for Eclipse Committers* for development of Eclipse CDT
+2. Import the projects from the repository that you are interested in. Other parts of CDT are available through the target platform so you can have only some of the projects imported into your workspace.<br/>
+You need at least
+   * org.eclipse.cdt.ui
+   * org.eclipse.cdt.target
+3. The target platform to use is `releng/org.eclipse.cdt.target/cdt.target`
+   1. Expand the `org.eclipse.cdt.target` project.
+   2. Double-click on cdt.target.
+   3.  In the editor that just opened, click Set as Active Target Platform on the top right.
+   4. Eclipse will now download the required dependencies, which may take some time the first time. Once this is done, it should trigger a full build of your workspace and a lot of errors should go away. 
+4. The API baseline to use is `releng/org.eclipse.cdt.target/cdt-baseline.target` - see [Using API Tooling](POLICY.md#Using-API-Tooling)
+   1. > Add Quick explanation how to set that up
+
 
 ### Creating Pull Requests
 
 To make changes to the CDT, whether it be code, docs, JUnits, etc., you will need to create a Pull Request. Below is the process for creating pull requests. The Eclipse CDT project uses GitHub, therefore the [standard help and advice](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests) on using GitHub Pull Requests are useful for additional details.
 
+> Maybe clarify commiter/contributor
 These steps apply to anyone, committer or non-committer (contributor) on the project, however the audience below is contributors (non-committers) as committers normally know the development and contribution process to get their committer status.
 
 - To fix anything in CDT first you can create or find an existing [https://github.com/eclipse-cdt/cdt/issues issue] report for this particular problem/enhancement. Creating an issue is optional, but highly recommended for larger changes to provide a place to pull all aspects of the improvement together and to discuss acceptable solutions before a Pull Request may be ready.
@@ -29,6 +68,7 @@ These steps apply to anyone, committer or non-committer (contributor) on the pro
   - Code with any of the warnings/errors mentioned in the policy, including strings externalization and API errors will not be accepted.
 - To minimize the change, do not re-format the source code you edited (except changed lines). Do not fix any warnings in the code you are not changing 
 - If you really want to do formatting or styling (such as modernizing code) - create another commit for that and submit a Pull Request (it is good to fix warnings but it would clutter the patch, you want to solve one problem at a time).
+> Why not just an extra commit? Why an extra PR? That's ok, but I'm wondering.
   - For changes that are strictly cosmetc, a commit message of `Cosmetics.` is sufficient, any additional information that may help a reviewer is more than welcome.
 - To speed up process of applying your changes you should create one or more junit tests as well and include it in your change
 - See [Commit messages matter. Here's how to write them well.](https://cbea.ms/git-commit/)
@@ -36,12 +76,14 @@ These steps apply to anyone, committer or non-committer (contributor) on the pro
 ```
   Short Description Fixes #123
 ```
+> I think having a good bug-template is really important here.
+> Also having a PR-Template that explains things....
 - Make sure GitHub Issue has a clear reproducible scenario, if not add one 
 - Create a Pull Request for your commit(s).
   - Eclipse CDT follows standard [GitHub practice](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) on using Pull Requests.
   - Eclipse CDT borrows process when possible from the Eclipse Platform project rather than duplicating it here. See the Eclipse Platform's [recommended workflow](https://github.com/eclipse-platform/.github/blob/main/CONTRIBUTING.md#recommended-workflow) for creating Pull Requests.
 - Normally committers are watching new Issues and Pull Requests and somebody would look at your contribution in a few days
-- If it has not received attention in a week or so, some nagging can help. Send email to [cdt-dev](#contact) asking committers to look at the contribution. Continue sending e-mails until somebody would give up and look :)
+If it has not received attention in a week or so, some nagging can help. Send email to [cdt-dev](#contact) asking committers to look at the contribution. Continue sending e-mails until somebody would give up and look. :)
 
 ### Copyright, License and Provenance
 
@@ -64,36 +106,18 @@ These are the steps that a committer should undertake for all Pull Requests.
 2. Code inspect and test and the patch
 3. If the patch is > 1,000 lines and from a non-committer, it must be submitted for IP review, i.e. CQ in IPZilla. See [IP Log](https://wiki.eclipse.org/Development_Resources/Automatic_IP_Log)
 4. Merge the Pull Request. Do so while keeping a clean history for CDT
-- Generally use "Squash and Merge" when merging the PR. As most PRs normally consist of multiple commits, with subsequent commits containing small fixes based on review feedback, this method keeps the long term CDT git history clean.
+- Generally use "Squash and Merge" when merging the PR.
+    > I personally hate the squash-feature because it is an incentive to write one big commit insead of multiple small, easy to review commits.
+    > But that's probably a religious topic. ;)
+    > At least in my dev-environment most PR consist of multiple commits.
+
+ As most PRs normally consist of multiple commits, with subsequent commits containing small fixes based on review feedback, this method keeps the long term CDT git history clean.
 - Use "Rebase and Merge" when the Pull Request has multiple commits separated in a logical fashion.
 - Only use "Create a Merge Commit" when there is a natural grouping that will be best expressed by showing two branches plus a merge commit.
 - It is not necessary for the commit to have a reference in the commit message to the pull request. This reference can be obtained from GitHub automatically. See this [Q&A](https://github.community/t/get-pull-request-associated-with-a-commit/13674)
 5. If there is an associated Issue, close the issue and set the milestone.
 
-### Setup CDT for development with Oomph
 
-The recommended flow for most users is to use the "Oomph" installer. With a few clicks you can get a fully working development environment.
-
-Use the Eclipse installer (Oomph) to setup the Eclipse installation and everything required to get started with CDT development. It downloads Eclipse, sets the API baseline, clones the CDT git repo and imports the projects for you.
-
-1. Download and run the Eclipse installer, available at https://www.eclipse.org/downloads/packages/installer.
-2. In the first page (product selection), click the preference button in the top-right corner and select the Advanced Mode button.
-  - If you are behind a proxy, at this point you might want to double check your network settings by clicking in the "Network Proxy Settings" at the bottom.
-3. Select Eclipse IDE for Eclipse Committers and select Latest as the product version. Click next.
-4. Under Eclipse Projects, select CDT. It should now be visible in the bottom list. Click next.
-5. Enter installation folder name, workspace name, etc. Click Next, Finish.
-6. The installer will download Eclipse, clone the git repository and import the sets of projects you selected.
-
-**TODO** Put in animated gif of install
-
-### Setup CDT for development, manual setup
-
-Many of the active Eclipse CDT developers manually setup their development environment instead of using Oomph as described above. *Developers new to Eclipse development should follow the Oomph instructions above.* The instructions in this section are brief and assume reader has experience in Eclipse development already.
-
-1. Use *Eclipse IDE for Eclipse Committers* for development of Eclipse CDT
-2. Import the projects from the repository that you are interested in. Other parts of CDT are available through the target platform so you can have only some of the projects imported into your workspace.
-3. The target platform to use is `releng/org.eclipse.cdt.target/cdt.target`
-4. The API baseline to use is `releng/org.eclipse.cdt.target/cdt-baseline.target` - see [Using API Tooling](POLICY.md#Using-API-Tooling)
 
 ### Building CDT (from the command line)
 
