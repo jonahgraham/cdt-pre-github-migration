@@ -52,6 +52,8 @@ You need at least
    1. > Add Quick explanation how to set that up
 
 
+> https://wiki.eclipse.org/Getting_started_with_CDT_development#Launching needs to be added here.
+
 ### Creating Pull Requests
 
 To make changes to the CDT, whether it be code, docs, JUnits, etc., you will need to create a Pull Request. Below is the process for creating pull requests. The Eclipse CDT project uses GitHub, therefore the [standard help and advice](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests) on using GitHub Pull Requests are useful for additional details.
